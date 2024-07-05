@@ -35,16 +35,15 @@ namespace LdapHelper
             {
                 try
                 {
+                    //连接
                     await ldap.ConnectAsync(_ldapSetting.Server, _ldapSetting.Port);
-                    // 连接到LDAP服务器
-                    //ldap.Connect(new Uri(_ldapPath));
+
                     // 绑定到LDAP服务器 
                     await ldap.BindAsync(_ldapSetting.BindingDN, _ldapSetting.BindingPassword);
 
                     foreach (var userOU in _ldapSetting.UserOU.Split('|'))
                     {
                         // 创建搜索请求
-                        //var entities = await ldap.SearchAsync(userOU, LdapConnection.ScopeSub, filter, attributeList, false);
                         SearchOptions options = new SearchOptions(userOU, LdapConnection.ScopeSub, filter, attributeList);
                         var entities = await ldap.SearchUsingSimplePagingAsync(options, 1);
                         var attribute = new Dictionary<string, string>();
@@ -67,6 +66,8 @@ namespace LdapHelper
                         {
                             if (!string.IsNullOrWhiteSpace(password))
                             {
+                                //重新连接并重新绑定
+                                await ldap.ConnectAsync(_ldapSetting.Server, _ldapSetting.Port);
                                 await ldap.BindAsync(ladpUser.UserDN, password);
                                 ladpUser.ValidPassword = true;
                                 ladpUser.Message = "密码验证正确";
